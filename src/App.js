@@ -2,25 +2,39 @@ import React from 'react';
 import logo from './logo.svg';
 import './App.css';
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+import Board from './Board';
+
+class App extends React.Component {
+
+ state = {
+   chips: [
+     2, 0, 0, 0, 0, -5,
+     0, -3, 0, 0, 0, 5,
+     -5, 0, 0, 0, 3, 0,
+     5, 0, 0, 0, 0, -2
+   ],
+   whiteHome: 15,
+   whiteJail: 5,
+   blackHome: 15,
+   blackJail: 5,
+ }
+
+
+spaceClicked = (index)=> {
+  console.log(index);
+}
+
+  render() {
+   return (
+     <div className="App">
+      <Board chips={this.state.chips} onClick={this.spaceClicked}
+        whiteJail={this.state.whiteJail}  whiteHome={this.state.whiteHome}
+        blackJail={this.state.blackJail}  blackHome={this.state.blackHome}
+        />
     </div>
   );
+ }
+
 }
 
 export default App;
