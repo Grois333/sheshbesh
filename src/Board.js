@@ -13,6 +13,7 @@ const Board = ({
   selectedChip,
   chips,
   onClick,
+  onDoubleClick,
 })=> (
   <svg viewBox='0 0 1500 1000' className='Board'>
     <rect x={0} y={0}
@@ -80,6 +81,7 @@ const Board = ({
           <rect x={centers[i] - 50} width={100}
                 y={ i < 12 ? 20 : 550 } height={430}
                 fill='transparent' stroke='transparent'
+                onDoubleClick={()=> onDoubleClick(i)}
                 onClick={()=> onClick(i)} />
         </g>
       ))

@@ -3,6 +3,8 @@ import './App.css';
 
 import Board from './Board';
 
+import { calculateLegalMoves } from './util';
+
 class App extends React.Component {
 
   state = {
@@ -74,6 +76,46 @@ class App extends React.Component {
     }
   }
 
+  spaceDoubleClicked = (index) => {
+    console.log('dbl', index);
+    // if its a doubleClick / long press % chip can go home, makeMove(go home)
+
+    const legalHomeMoves = calculateLegalMoves(
+      this.state.chips, this.state.dice, this.state.turn,
+      this.state.whiteJail, this.state.blackJail
+    ).filter(move => (
+      (move.moveTo === this.state.turn + 'Home') && (move.moveFrom === index)
+    ));
+
+    if ( legalHomeMoves.length ) {
+      console.log(this.state.turn, 'can move', index, ' home');
+
+      let usedDie = this.state.turn === 'black' ? 24 - index : index + 1;
+
+      if(!~this.state.dice.indexOf(usedDie)){
+        usedDie = this.state.dice.find(die => die > usedDie);
+      }
+
+      this.setState({
+        selectedChip: null,
+        chips: this.state.chips.map((chip, i)=>(
+          i !== index
+        ) ? chip : (
+          this.state.turn === 'white' ? chip + 1 : chip -1
+        )),
+
+        dice:[
+          ...this.state.dice.slice(0, this.state.dice.indexOf(usedDie) ),
+          ...this.state.dice.slice( this.state.dice.indexOf(usedDie) + 1 )
+        ],
+
+        [this.state.turn + 'home']: this.state[ this.state.turn + 'Home'] + 1,
+
+      });
+    }
+
+  }
+
   makeMove = (to)=> {
     const direction = this.state.turn === 'black' ? 1 : -1;
 
@@ -128,12 +170,11 @@ class App extends React.Component {
 
     this.setState({
       dice: nextDice,
-      turn: nextTurn,
       chips: nextChips,
       whiteJail: nextWhiteJail,
       blackJail: nextBlackJail,
       selectedChip: null,
-    });
+    }, this.checkTurnOver);
   }
 
   roll = ()=> {
@@ -143,14 +184,35 @@ class App extends React.Component {
       if( this.state.dice[0] === this.state.dice[1] )
         this.setState({
           dice: [...this.state.dice, ...this.state.dice],
-        });
+        }, this.checkTurnOver);
+
+       else this.checkTurnOver();
+
     })
+  }
+
+  checkTurnOver = () => {
+
+     if( this.state.whiteHome === 15 ) console.log('white wins');
+     if( this.state.blackHome === 15 ) console.log('black wins');
+
+    const legalMoves = calculateLegalMoves(
+      this.state.chips, this.state.dice, this.state.turn,
+      this.state.whiteJail, this.state.blackJail
+    );
+    console.log(legalMoves);
+    if( !legalMoves.length ) this.setState({
+      turn: ({ black: 'white', white: 'black' })[this.state.turn],
+      dice: [],
+    });
+
   }
 
   render() {
     return (
       <div className="App">
         <Board chips={this.state.chips} onClick={this.spaceClicked}
+               onDoubleClick = {this.spaceDoubleClicked}
                selectedChip={this.state.selectedChip}
                whiteJail={this.state.whiteJail} whiteHome={this.state.whiteHome}
                blackJail={this.state.blackJail} blackHome={this.state.blackHome} />
