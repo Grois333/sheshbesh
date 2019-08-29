@@ -5,21 +5,23 @@ import Board from './Board';
 
 import { calculateLegalMoves } from './util';
 
+const initBoard = [
+  2, 0, 0, 0, 0, -5,
+  0, -3, 0, 0, 0, 5,
+  -5, 0, 0, 0, 3, 0,
+  5, 0, 0, 0, 0, -2,
+];
+
 class App extends React.Component {
 
   state = {
-    chips: [
-      2, 0, 0, 0, 0, -5,
-      0, -3, 0, 0, 0, 5,
-      -5, 0, 0, 0, 3, 0,
-      5, 0, 0, 0, 0, -2,
-    ],
+    chips: [...initBoard],
     whiteHome: 0,
     whiteJail: 0,
     blackHome: 0,
     blackJail: 0,
 
-    turn: 'white',
+    turn: 'black',
     dice: [],
     selectedChip: null,
   }
@@ -71,50 +73,47 @@ class App extends React.Component {
       if( index === this.state.selectedChip ){
         this.setState({ selectedChip: null });
       }
-
-      //// if it's a doubleClick / long press & chip can go home, makeMove(go home)
     }
   }
 
-  spaceDoubleClicked = (index) => {
-    console.log('dbl', index);
-    // if its a doubleClick / long press % chip can go home, makeMove(go home)
+  spaceDoubleClicked = (index)=> {
+    //// if it's a doubleClick & chip can go home, makeMove(go home)
 
     const legalHomeMoves = calculateLegalMoves(
       this.state.chips, this.state.dice, this.state.turn,
       this.state.whiteJail, this.state.blackJail
     ).filter(move => (
       (move.moveTo === this.state.turn + 'Home') && (move.moveFrom === index)
-    ));
+    ) );
 
-    if ( legalHomeMoves.length ) {
-      console.log(this.state.turn, 'can move', index, ' home');
+    if( legalHomeMoves.length ){
 
       let usedDie = this.state.turn === 'black' ? 24 - index : index + 1;
 
-      if(!~this.state.dice.indexOf(usedDie)){
+      if( !~this.state.dice.indexOf(usedDie) )
         usedDie = this.state.dice.find(die => die > usedDie);
-      }
+
 
       this.setState({
         selectedChip: null,
-        chips: this.state.chips.map((chip, i)=>(
+        chips: this.state.chips.map((chip, i)=> (
           i !== index
         ) ? chip : (
-          this.state.turn === 'white' ? chip + 1 : chip -1
+          this.state.turn === 'white' ? chip + 1 : chip - 1
         )),
 
-        dice:[
-          ...this.state.dice.slice(0, this.state.dice.indexOf(usedDie) ),
-          ...this.state.dice.slice( this.state.dice.indexOf(usedDie) + 1 )
+        dice: [
+          ...this.state.dice.slice( 0, this.state.dice.indexOf(usedDie) ),
+          ...this.state.dice.slice( this.state.dice.indexOf(usedDie) + 1)
         ],
 
-        [this.state.turn + 'home']: this.state[ this.state.turn + 'Home'] + 1,
+        [this.state.turn + 'Home']: this.state[ this.state.turn + 'Home' ] + 1,
 
-      });
+      }, this.checkTurnOver);
+
     }
-
   }
+
 
   makeMove = (to)=> {
     const direction = this.state.turn === 'black' ? 1 : -1;
@@ -155,19 +154,6 @@ class App extends React.Component {
 
     // if the to is home, move there, check if game is over
 
-    // check if turn is over
-    let nextTurn = this.state.turn;
-
-    if( !nextDice.length ) nextTurn = ({ black: 'white', white: 'black' })[this.state.turn];
-
-    // also need to check if no more legal moves
-    //// if we're in Jail
-    ////// if all dice we have lead to blocked spaces (nextTurn = other)
-    //// else
-    ////// if all dice we have, for all the chips we have lead to blocked spaces
-
-    // if over, compute & set next player (blockade -> same, otherwise toggle)
-
     this.setState({
       dice: nextDice,
       chips: nextChips,
@@ -186,33 +172,31 @@ class App extends React.Component {
           dice: [...this.state.dice, ...this.state.dice],
         }, this.checkTurnOver);
 
-       else this.checkTurnOver();
-
+      else this.checkTurnOver();
     })
   }
 
-  checkTurnOver = () => {
-
-     if( this.state.whiteHome === 15 ) console.log('white wins');
-     if( this.state.blackHome === 15 ) console.log('black wins');
+  checkTurnOver = ()=>{
+    if( this.state.whiteHome === 15 ) console.log('white wins');
+    if( this.state.blackHome === 15 ) console.log('black wins');
 
     const legalMoves = calculateLegalMoves(
       this.state.chips, this.state.dice, this.state.turn,
       this.state.whiteJail, this.state.blackJail
     );
-    console.log(legalMoves);
+
     if( !legalMoves.length ) this.setState({
       turn: ({ black: 'white', white: 'black' })[this.state.turn],
       dice: [],
     });
-
   }
 
   render() {
     return (
       <div className="App">
-        <Board chips={this.state.chips} onClick={this.spaceClicked}
-               onDoubleClick = {this.spaceDoubleClicked}
+        <Board chips={this.state.chips}
+               onClick={this.spaceClicked}
+               onDoubleClick={this.spaceDoubleClicked}
                selectedChip={this.state.selectedChip}
                whiteJail={this.state.whiteJail} whiteHome={this.state.whiteHome}
                blackJail={this.state.blackJail} blackHome={this.state.blackHome} />
